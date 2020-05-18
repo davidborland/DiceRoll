@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-  <title>Dice Roll</title>
+  <title>Randomizer</title>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
 </head>
@@ -10,7 +10,7 @@
 <body>
 
 <div class="jumbotron jumbotron-fluid text-center">
-  <h1>Dice Roll</h1>
+  <h1 id="header">Coin Flip</h1>
 </div>
 
 <div class="container-fluid text-center" style="width: 1200px">
@@ -21,13 +21,8 @@
         <div class="form-group text-left">
           <label for="typeSelect">Type</label>
           <select class="form-control" id="typeSelect">
-            <option value="2">Coin flip</option>
-            <option value="4">4-sided</option>
-            <option value="6">6-sided</option>
-            <option value="8">8-sided</option>
-            <option value="10">10-sided</option>
-            <option value="12">12-sided</option>
-            <option value="20">20-sided</option>
+            <option value="2">Coin</option>
+            <option value="6">Dice</option>
           </select>
           <label class="mt-3" for="numberSelect">Number</label>
           <select class="form-control" id="numberSelect">
@@ -35,11 +30,11 @@
             <option value="2">2</option>
           </select>
         </div>
-        <button type="button" class="btn btn-secondary form-control mt-1" id="rollButton">Roll!</button>
+        <button type="button" class="btn btn-secondary form-control mt-1" id="rollButton">Flip!</button>
       </div>
     </div>
     <div class="col-8">
-      <h3>Result</h3>
+      <h3 id="resultLabel">Result</h3>
       <div id="result" class="row mt-5"></div>
     </div>
   </div>
@@ -61,6 +56,9 @@ let diceNumber = 1;
 // Shape select
 d3.select("#typeSelect").on("change", () => {
   diceType = +d3.event.target.value;
+
+  d3.select("#header").text(diceType === 2 ? "Coin Flip" : "Dice Roll");
+  d3.select("#rollButton").text(diceType === 2 ? "Flip!" : "Roll!");
 });
 
 // Number select
@@ -79,9 +77,11 @@ function roll() {
   d3.select("#typeSelect").property("disabled", true);
   d3.select("#numberSelect").property("disabled", true);
   d3.select("#rollButton").property("disabled", true);
+  d3.select("#resultLabel").text(diceType === 2 ? "Flipping..." : "Rolling...");
 
+  const imageSize = "300px";
   const rollTime = 3000;
-  const rollIncrement = 10;
+  const rollIncrement = 100;
 
   let time = 0;
   const timer = setInterval(() => {
@@ -93,13 +93,14 @@ function roll() {
         .data(dice);
 
     const divEnter = div.enter().append("div")
-        .attr("class", "col")
+        .attr("class", "col");
 
-    divEnter.append("h1")
-        .attr("class", "display-1");
+    divEnter.append("img")
+        .style("width", imageSize)
+        .style("height", imageSize);
 
-    divEnter.merge(div).select("h1")
-        .text(d => diceType === 2 ? d === 1 ? "Tails" : "Heads" : d);
+    divEnter.merge(div).select("img")
+        .attr("src", d => diceType === 2 ? d === 1 ? "images/tails.png" : "images/heads.png" : "images/" + d + ".png");;
 
     div.exit().remove();
 
@@ -109,6 +110,7 @@ function roll() {
       d3.select("#typeSelect").property("disabled", false);
       d3.select("#numberSelect").property("disabled", false);
       d3.select("#rollButton").property("disabled", false);
+    d3.select("#resultLabel").text("Result");
 
       clearInterval(timer);
     }
