@@ -1,115 +1,158 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <meta http-equiv='Content-Type' content='text/html; charset=utf-8'/>
   <title>Randomizer</title>
-  <script src="https://d3js.org/d3.v5.min.js"></script>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+  <script src='https://d3js.org/d3.v5.min.js'></script>
+  <link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css'>
+
+ <style>
+  #resultDiv {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    width: '100%';
+  }
+  .result {
+    margin-top: 5px;
+  }
+ </style>
 </head>
 
 <body>
 
-<div class="jumbotron text-center">
-  <h1 id="header">Coin Flip</h1>
+<div class='jumbotron text-center'>
+  <h1 id='header'>Coin Flip</h1>
 </div>
 
-<div class="container-fluid text-center" style="width: 1200px">
-  <div class="row">
-    <div class="col-2">
+<div class='container-fluid text-center' style='width: 1200px'>
+  <div class='row'>
+    <div class='col-2'>
       <div>
         <h3>Controls</h3>
-        <div class="form-group text-left">
-          <label for="typeSelect">Type</label>
-          <select class="form-control" id="typeSelect">
-            <option value="2">Coin</option>
-            <option value="6">Dice</option>
+        <div class='form-group text-left'>
+          <label for='typeSelect'>Type</label>
+          <select class='form-control' id='typeSelect'>
           </select>
-          <label class="mt-3" for="numberSelect">Number</label>
-          <select class="form-control" id="numberSelect">
-            <option value="1">1</option>
-            <option value="2">2</option>
+          <label class='mt-3' for='numberSelect'>Number</label>
+          <select class='form-control' id='numberSelect'>
+            <option value='1'>1</option>
+            <option value='2'>2</option>
+            <option value='28'>28</option>
           </select>
         </div>
-        <button type="button" class="btn btn-secondary form-control mt-1" id="rollButton">Flip!</button>
+        <button type='button' class='btn btn-secondary form-control mt-1' id='rollButton'>Flip!</button>
       </div>
     </div>
-    <div class="col-8">
-      <h3 id="resultLabel">Result</h3>
-      <div id="result" class="row mt-5"></div>
+    <div class='col-10'>
+      <h3 id='resultLabel'>Result</h3>
+      <div id='resultDiv'></div>
     </div>
   </div>
-  <div class="row">
-    <div class="col text-right small mt-5">
+  <div class='row'>
+    <div class='col text-right small mt-5'>
       <div>Author: David Borland, RENCI, UNC-Chapel Hill</div>
-      <div><a href="https://github.com/davidborland/DiceRoll">GitHub repository</a></div>
+      <div><a href='https://github.com/davidborland/DiceRoll'>GitHub repository</a></div>
     </div>
   </div>
 </div>
 
-<script type="text/javascript">
+<script type='text/javascript'>
 
-// Edit shape
-let diceType = 2;
-let diceNumber = 1;
+// Random objects
+const objects = [
+  {
+    type: 'coin',
+    label: 'Coin',
+    numValues: 2,
+    header: 'Coin Flip',
+    buttonText: 'Flip!',
+    activeText: 'Flipping...',
+    image: which => which === 1 ? 'images/heads.png' : 'images/tails.png'
+  },
+  {
+    type: 'dice',
+    label: 'Dice',
+    numValues: 6,
+    header: 'Dice Roll',
+    buttonText: 'Roll!',
+    activeText: 'Rolling...',
+    image: which => 'images/' + which + '.png'
+  }
+]
 
-// Shape select
-d3.select("#typeSelect").on("change", () => {
-  diceType = +d3.event.target.value;
+let object = objects[0];
+let numObjects = 1;
 
-  d3.select("#header").text(diceType === 2 ? "Coin Flip" : "Dice Roll");
-  d3.select("#rollButton").text(diceType === 2 ? "Flip!" : "Roll!");
+// Object select
+d3.select('#typeSelect').selectAll('option')
+  .data(objects)
+  .enter().append('option')
+  .attr('value', d => d.type)
+  .text(d => d.label);
+
+d3.select('#typeSelect').on('change', () => {
+  object = objects.find(({ type }) => type === d3.event.target.value);
+
+  console.log(d3.event.target.value);
+
+  d3.select('#header').text(object.header);
+  d3.select('#rollButton').text(object.buttonText);
 });
 
 // Number select
-d3.select("#numberSelect").on("change", () => {
-  diceNumber = +d3.event.target.value;
+d3.select('#numberSelect').on('change', () => {
+  numObjects = +d3.event.target.value;
 });
 
 // Roll
-d3.select("#rollButton").on("click", roll);
+d3.select('#rollButton').on('click', roll);
 
 const randomInt = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function roll() {
-  d3.select("#typeSelect").property("disabled", true);
-  d3.select("#numberSelect").property("disabled", true);
-  d3.select("#rollButton").property("disabled", true);
-  d3.select("#resultLabel").text(diceType === 2 ? "Flipping..." : "Rolling...");
+  d3.select('#typeSelect').property('disabled', true);
+  d3.select('#numberSelect').property('disabled', true);
+  d3.select('#rollButton').property('disabled', true);
+  d3.select('#resultLabel').text(object.activeText);
 
-  const imageSize = "300px";
+  const imageSize = numObjects > 2 ? '130px' : '300px';
   const rollTime = 3000;
   const rollIncrement = 100;
 
   let time = 0;
   const timer = setInterval(() => {
-    const dice = d3.range(0, diceNumber).map(() => {
-      return randomInt(1, diceType);
+    const values = d3.range(0, numObjects).map(() => {
+      return randomInt(1, object.numValues);
     });
 
-    const div = d3.select("#result").selectAll("div")
-        .data(dice);
+    const result = d3.select('#resultDiv').selectAll('.result')
+        .data(values);
 
-    const divEnter = div.enter().append("div")
-        .attr("class", "col");
+    const resultEnter = result.enter().append('div')
+        .attr('class', 'result');
 
-    divEnter.append("img")
-        .style("width", imageSize)
-        .style("height", imageSize);
+    resultEnter.append('img');
 
-    divEnter.merge(div).select("img")
-        .attr("src", d => diceType === 2 ? d === 1 ? "images/tails.png" : "images/heads.png" : "images/" + d + ".png");;
+    resultEnter.merge(result).select('img')
+        .style('width', imageSize)
+        .style('height', imageSize)
+        .attr('src', object.image);
 
-    div.exit().remove();
+    result.exit().remove();
 
     time += rollIncrement;
     
     if (time >= rollTime) { 
-      d3.select("#typeSelect").property("disabled", false);
-      d3.select("#numberSelect").property("disabled", false);
-      d3.select("#rollButton").property("disabled", false);
-    d3.select("#resultLabel").text("Result");
+      d3.select('#typeSelect').property('disabled', false);
+      d3.select('#numberSelect').property('disabled', false);
+      d3.select('#rollButton').property('disabled', false);
+      d3.select('#resultLabel').text(object.type === 'coin' ? 
+        'Result: ' + values.reduce((p, c) => p + (c === 1 ? 1 : 0)) + ' heads': 
+        'Result'
+      );
 
       clearInterval(timer);
     }
