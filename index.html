@@ -94,8 +94,6 @@ d3.select('#typeSelect').selectAll('option')
 d3.select('#typeSelect').on('change', () => {
   object = objects.find(({ type }) => type === d3.event.target.value);
 
-  console.log(d3.event.target.value);
-
   d3.select('#header').text(object.header);
   d3.select('#rollButton').text(object.buttonText);
 });
@@ -144,13 +142,15 @@ function roll() {
     result.exit().remove();
 
     time += rollIncrement;
+
+    console.log(values)
     
     if (time >= rollTime) { 
       d3.select('#typeSelect').property('disabled', false);
       d3.select('#numberSelect').property('disabled', false);
       d3.select('#rollButton').property('disabled', false);
       d3.select('#resultLabel').text(object.type === 'coin' ? 
-        'Result: ' + values.reduce((p, c) => p + (c === 1 ? 1 : 0)) + ' heads': 
+        'Result: ' + values.reduce((p, c) => p + (c === 1 ? 1 : 0), 0) + ' heads': 
         'Result'
       );
 
